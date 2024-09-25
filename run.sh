@@ -52,8 +52,11 @@ sign="0x0EBB90D1DC0B1150FF99A356E46ED00B12038406"
 encrypt="0x67FC8A8BDC06FA0CAC4B0F5BB0F8791F5D69F478"
 
 # Run type should be test if we're using a dummy
-# job to test the script
+# job to test the script.
+# Export the variables because they are used in the processes
+# spawned by GNU parallel.
 export run_type="test"
+export n_test_waits=6
 export stress_cpus=2
 export output_size="1G"
 
@@ -104,16 +107,16 @@ function run {
     # File to work on
     local input="$5"
 
-    parallel_log_setting "job" "${job}"
-    parallel_log_setting "file to work on" "${input}"
     parallel_log_setting "workspace" "${work}"
     parallel_log_setting "log destination" "${logs}"
     parallel_log_setting "ramdisk space" "${ramdisk}"
+
+    parallel_log_setting "job" "${job}"
+    parallel_log_setting "file to work on" "${input}"
+
     parallel_log_setting "target system load" "${target_load}"
 
-    parallel_check_exists "${work}"
     parallel_check_exists "${input}"
-    parallel_check_exists "${ramdisk}"
 
     if [[ "$run_type" == "test" ]]; then
     #---TEST-CODE---
@@ -141,7 +144,7 @@ function run {
 
     if [[ "$run_type" == "test" ]]; then
     #---TEST-CODE---
-        for k in {1..24}; do
+        for k in $(seq 1 $n_test_waits); ; do
             sleep ${WAIT};
             apply_niceload "${mainid}" \
                            "${ramdisk}/workers" \
@@ -165,7 +168,7 @@ function run {
     #---END---------
     else
     #---REAL-CODE---
-        wait $mainid || parallel_report $? "working"
+        wait $mainid || parallel_report $? "waiting for run to finish"
     #---END---------
     fi
 
@@ -207,7 +210,9 @@ parallel_pid=$!
 counter=0
 while kill -0 "$parallel_pid" 2> /dev/null; do
     sleep ${WAIT}
+
     load_report "${job} run" "${logs}/${STAMP}.${job}.$$.load"
+
     if [ -f "$ramdisk/workers" ]; then
         while read pid; do
             if kill -0 "${pid%% *}" 2> /dev/null; then
@@ -216,14 +221,19 @@ while kill -0 "$parallel_pid" 2> /dev/null; do
             fi
         done < $ramdisk/workers
     fi
+
     free_memory_report "${job} run" \
                        "${logs}/${STAMP}.${job}.$$.free"
+
+    # Check for a spot interruption notice
     if [ "$ec2_flag" == "yes" ]; then
         spot_interruption_found "${logs}/${STAMP}.${job}.$$.metadata" ||\
                                 report report "${SHUTDOWN_SIGNAL}" \
                                 "checking for interruption" \
                                 "spot interruption detected"
     fi
+
+    # Run encryption and rclone at intervals
     counter=$(( counter+1 ))
     if [ "$counter" == "$skip" ]; then
 
@@ -236,6 +246,7 @@ while kill -0 "$parallel_pid" 2> /dev/null; do
         # Save the results to the output destination
         send_outputs
 
+        # Reset counter if outputs have been saved
         counter=0
     fi
 done
