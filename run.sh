@@ -16,6 +16,9 @@ MAX_SUBPROCESSES=2
 INBOUND_TRANSFERS=4
 OUTBOUND_TRANSFERS=4
 
+export OPT_NICELOAD=""
+export OPT_PARALLEL=""
+
 ec2_flag="yes"
 
 clean="$1"      # What should be cleaned up in the workspace?
@@ -204,7 +207,7 @@ decrypt_inputs
 find "${work}" -name "${inglob}" |\
     parallel --results "${logs}/run/{/}/" \
              --joblog "${logs}/${STAMP}.${job}.run.log" \
-             --jobs "${MAX_SUBPROCESSES}" \
+             --jobs "${MAX_SUBPROCESSES}" ${OPT_PARALLEL}\
         run "${work}" "${logs}" "${ramdisk}" "${job}" {} &
 
 parallel_pid=$!

@@ -29,7 +29,7 @@ function decrypt_inputs {
             find "${work}" -name "${inglob}.gpg" |\
                 parallel --results "${logs}/gpg/input/{/}/" \
                          --joblog "${logs}/${STAMP}.${job}.gpg.input.log" \
-                         --jobs "$MAX_SUBPROCESSES" \
+                         --jobs "$MAX_SUBPROCESSES" ${OPT_PARALLEL} \
                     nice -n "${NICE}" gpg --output {.} \
                                           --compress-algo 0 \
                                           --batch \
@@ -56,7 +56,7 @@ function encrypt_outputs {
     find "${work}" -name "${outglob}" |\
         parallel --results "${logs}/gpg/output/{/}/" \
                  --joblog "${logs}/${STAMP}.${job}.gpg.output.log" \
-                 --jobs "$MAX_SUBPROCESSES" \
+                 --jobs "$MAX_SUBPROCESSES" ${OPT_PARALLEL} \
             nice -n "${NICE}" gpg --output {}.gpg \
                                   --compress-algo 0 \
                                   --batch \
