@@ -60,6 +60,7 @@ export n_test_waits=6
 export stress_cpus=2
 export output_size="1G"
 
+# Set information for log outputs
 set_stamp
 
 # Check commands are available
