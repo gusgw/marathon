@@ -7,6 +7,7 @@ toc: false
 number-sections: false
 colorlinks: true
 tbl-cap-location: bottom
+linestretch: 2.0
 format:
   pdf:
     template: "compact.latex"
@@ -19,11 +20,48 @@ format:
     fontsize: 11pt
     include-in-header: "header.tex"
     include-before-body: "start.tex"
-    documentclass: revtex4-2
-    classoptions:
-      - preprint
   gfm:
     preview-mode: raw
+projects:
+  - title:        "Supervised classification of natural gas price movements"
+    method:       "Calculations use `scikit-learn` and run on AWS."
+    code:         "Python"
+    link:         https://www.gusgw.net/docs/classification
+    publication:  "Commercial work"
+    support:      "Bold US Power Pty Ltd"
+    computing:    "AWS"
+    description:  |+
+      We use supervised machine-learning methods to predict price changes
+      in the US Henry Hub market for options on natural gas.
+      Despite increases in the sizes of price movements
+      for a particular contract as maturity approaches,
+      we identify stable statistical properties that allow
+      comparisons of prices at different times, and increase the body of data
+      used for learning. The predictions are used to assist investment decisions.
+
+  - title:        "Multiweek prediction of the state of the northern hemisphere"
+    method:       "Langevin simulations"
+    code:         "Python and C++"
+    link:         https://www.gusgw.net/docs/weather
+    publication:  "Commercial work"
+    support:      "Bold US Power Pty. Ltd. and the Centre of Excellence for Climate Extremes"
+    computing:    "AWS"
+    description:  |+
+      Imperfect knowledge of the state of the Earth system,
+      combined with sensitivity to initial state, limits predictions.
+      Useful advanced warning of extreme weather requires multi-week lead times,
+      as do decisions on investments sensitive to energy markets.
+      An original mathematical method, and the design of data structures that
+      describe the Earth System, reduce the computational complexity and make
+      possible multi-week predictions not possible with traditional methods,
+      better even than with supercomputers used by facilities such as 
+      [NOAA in the USA](https://www.ncei.noaa.gov/products/weather-climate-models/global-ensemble-forecast),
+      the [Met. Office in the UK](https://www.metoffice.gov.uk),
+      and the [ECMWF in Europe](https://www.ecmwf.int/).
+      This new, lightweight method outperforms
+      for variables of critical interest the large scale,
+      computationally expensive,
+      [monolithic models that I developed and debugged for the Bureau of Meteorology.](http://www.bom.gov.au/research/projects/ACCESS-S/)
 ---
 
 *This repository is a work in progress.
@@ -73,6 +111,16 @@ Straightforward extensions of the code include:
     from a user data script would not be
     necessary if instead a machine image with
     all necessary software were used.
+
+## Projects that use this code
+
+### {{< meta projects.1.title >}}
+
+{{< meta projects.1.description >}}
+
+### {{< meta projects.2.title >}}
+
+{{< meta projects.2.description >}}
 
 ## Details of operation
 
