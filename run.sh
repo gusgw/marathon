@@ -10,7 +10,7 @@ export run_path=$(dirname $(realpath  $0))
 . ${run_path}/bump/parallel.sh
 
 export WAIT=10.0
-export OUTPUT_WAIT=120.0
+export output_wait=120.0
 
 export MAX_SUBPROCESSES=2
 INBOUND_TRANSFERS=4
@@ -218,7 +218,7 @@ echo "${report_pid} reporting resource use" >> "${ramdisk}/workers"
 
 # Periodically check for outputs, encrypt if necessary,
 # and save to destination
-poll_outputs "$parallel_pid" "${OUTPUT_WAIT}" &
+poll_outputs "$parallel_pid" "${output_wait}" &
 output_pid=$!
 echo "${output_pid} saving outputs asap" >> "${ramdisk}/workers"
 
