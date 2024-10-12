@@ -66,13 +66,13 @@ function encrypt_outputs {
                                   --lock-multiple \
                                   --sign --local-user "$sign" \
                                   --encrypt --recipient "$encrypt" {} &
-    local eo_parallel_pid=$!
-    while kill -0 "$eo_parallel_pid" 2> /dev/null; do
-        sleep ${WAIT}
-        load_report "${job} encrypt"  "${logs}/${STAMP}.${job}.$$.load"
-        free_memory_report "${job} gpg" \
-                           "${logs}/${STAMP}.${job}.$$.free"
-    done
+    # local eo_parallel_pid=$!
+    # while kill -0 "$eo_parallel_pid" 2> /dev/null; do
+    #     sleep ${WAIT}
+    #     load_report "${job} encrypt"  "${logs}/${STAMP}.${job}.$$.load"
+    #     free_memory_report "${job} gpg" \
+    #                        "${logs}/${STAMP}.${job}.$$.free"
+    # done
 
     return 0
 }
