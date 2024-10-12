@@ -209,51 +209,28 @@ find "${work}" -name "${inglob}" |\
              --joblog "${logs}/${STAMP}.${job}.run.log" \
              --jobs "${MAX_SUBPROCESSES}" ${OPT_PARALLEL}\
         run "${work}" "${logs}" "${ramdisk}" "${job}" {} &
-
 parallel_pid=$!
-counter=0
-while kill -0 "$parallel_pid" 2> /dev/null; do
-    sleep ${WAIT}
 
-    load_report "${job} run" "${logs}/${STAMP}.${job}.$$.load"
+# Periodically save information about resource usage
+poll_reports "$parallel_pid" "$$" "${WAIT}" &
+report_pid=$!
+echo "${report_pid} reporting resource use" >> "${ramdisk}/workers"
 
-    if [ -f "$ramdisk/workers" ]; then
-        while read pid; do
-            if kill -0 "${pid%% *}" 2> /dev/null; then
-                memory_report "${job} run" "${pid%% *}" \
-                    "${logs}/${STAMP}.${job}.${pid%% *}.memory"
-            fi
-        done < $ramdisk/workers
-    fi
+# Periodically check for outputs, encrypt if necessary,
+# and save to destination
+poll_outputs "$parallel_pid" "${OUTPUT_WAIT}" &
+output_pid=$!
+echo "${output_pid} saving outputs asap" >> "${ramdisk}/workers"
 
-    free_memory_report "${job} run" \
-                       "${logs}/${STAMP}.${job}.$$.free"
-
-    # Check for a spot interruption notice
-    if [ "$ec2_flag" == "yes" ]; then
-        spot_interruption_found "${logs}/${STAMP}.${job}.$$.metadata" ||\
-                                report report "${SHUTDOWN_SIGNAL}" \
-                                "checking for interruption" \
-                                "spot interruption detected"
-    fi
-
-    # Run encryption and rclone at intervals
-    counter=$(( counter+1 ))
-    if [ "$counter" == "$skip" ]; then
-
-        # Encrypt the results
-        if [ "${encrypt_flag}" == "yes" ]; then
-            >&2 echo "${STAMP}: calling encrypt_outputs"
-            encrypt_outputs
-        fi
-
-        # Save the results to the output destination
-        send_outputs
-
-        # Reset counter if outputs have been saved
-        counter=0
-    fi
-done
+# Either run an empty loop waiting for work to complete
+# or if appropriate poll for spot interruption notices
+if [ "$ec2_flag" == "yes" ]; then
+    poll_spot_interruption "${parallel_pid}" "${WAIT}"
+else
+    while kill -0 "$parallel_pid" 2> /dev/null; do
+        sleep ${WAIT}
+    done
+fi
 
 ######################################################################
 cleanup 0
