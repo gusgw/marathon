@@ -103,3 +103,26 @@ function send_outputs {
     fi
     return 0
 }
+
+function poll_outputs {
+
+    local po_pid_monitor=$1
+    local po_wait=$2
+    not_empty "$po_pid_monitor" "PID to monitor in loop condition"
+    not_empty "$po_wait" "time between checks for outputs"
+
+    while kill -0 "$po_pid_monitor" 2> /dev/null; do
+
+        sleep "${po_wait}"
+
+        # Encrypt the results
+        if [ "${encrypt_flag}" == "yes" ]; then
+            >&2 echo "${STAMP}: calling encrypt_outputs"
+            encrypt_outputs
+        fi
+
+        # Save the results to the output destination
+        send_outputs
+
+    done
+}
