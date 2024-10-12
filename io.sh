@@ -101,8 +101,5 @@ function send_outputs {
                 --transfers "${OUTBOUND_TRANSFERS}" ||\
             report $? "save results"
     fi
-    #     break
-    # done
-
     return 0
 }
