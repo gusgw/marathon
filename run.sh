@@ -2,7 +2,7 @@
 
 # Set the folder where this script is located
 # so that other files can be found.
-run_path=$(dirname $(realpath  $0))
+export run_path=$(dirname $(realpath  $0))
 
 # Load useful routines
 # https://github.com/gusgw/bump
@@ -10,11 +10,11 @@ run_path=$(dirname $(realpath  $0))
 . ${run_path}/bump/parallel.sh
 
 export WAIT=10.0
-export SKIP=12
+export OUTPUT_WAIT=120.0
 
-MAX_SUBPROCESSES=2
+export MAX_SUBPROCESSES=2
 INBOUND_TRANSFERS=4
-OUTBOUND_TRANSFERS=4
+export OUTBOUND_TRANSFERS=4
 
 export OPT_NICELOAD=""
 export OPT_PARALLEL=""
@@ -22,7 +22,7 @@ export OPT_PARALLEL=""
 ec2_flag="yes"
 
 clean="$1"      # What should be cleaned up in the workspace?
-job="$2"        # Give this run a name or number.
+export job="$2"        # Give this run a name or number.
 
 # Specify inputs to fetch to workspace with rclone
 # input="dummy:/mnt/data/chips/input"
@@ -31,10 +31,10 @@ iext="input"
 inglob="*.${iext}"
 
 # Specify outputs to get from workspace with rclone when done
-# output="dummy:/mnt/data/chips/output"
-output="aws-sydney-std:cavewall-tobermory-mnt-data-chips-output-test-0/"
+export output="dummy:/mnt/data/chips/output"
+# export output="aws-sydney-std:cavewall-tobermory-mnt-data-chips-output-test-0/"
 oext="output"
-outglob="*.${oext}"
+export outglob="*.${oext}"
 
 # Where is the working directory?
 workspace="/mnt/data/work"
@@ -50,9 +50,9 @@ export target_load=4.1
 
 # Specify keys for decryption of inputs,
 # and for signing and encryption of outputs
-encrypt_flag="yes"
-sign="0x0EBB90D1DC0B1150FF99A356E46ED00B12038406"
-encrypt="0x67FC8A8BDC06FA0CAC4B0F5BB0F8791F5D69F478"
+export encrypt_flag="yes"
+export sign="0x0EBB90D1DC0B1150FF99A356E46ED00B12038406"
+export encrypt="0x67FC8A8BDC06FA0CAC4B0F5BB0F8791F5D69F478"
 
 # Run type should be test if we're using a dummy
 # job to test the script.
