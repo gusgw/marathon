@@ -87,7 +87,9 @@ function cleanup_run {
     fi
 
     local log_archive="${work}/${STAMP}.${job}.$$.logs.tar.xz"
-    tar Jcvf "${log_archive}" "${logspace}/"
+    savewd="$(pwd)"
+    cd "${logspace}" && tar Jcvf "${log_archive}" "${job}/"
+    cd "${savewd}"
     rclone copy "${log_archive}" \
                 "${output}/" \
                 --config "${run_path}/rclone.conf" \
