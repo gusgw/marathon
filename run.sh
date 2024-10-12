@@ -19,14 +19,14 @@ export OUTBOUND_TRANSFERS=4
 export OPT_NICELOAD=""
 export OPT_PARALLEL=""
 
-ec2_flag="yes"
+ec2_flag="no"
 
 clean="$1"      # What should be cleaned up in the workspace?
 export job="$2"        # Give this run a name or number.
 
 # Specify inputs to fetch to workspace with rclone
-# input="dummy:/mnt/data/chips/input"
-input="aws-sydney-std:cavewall-tobermory-mnt-data-chips-input-test-0/"
+input="dummy:/mnt/data/chips/input"
+# input="aws-sydney-std:cavewall-tobermory-mnt-data-chips-input-test-0/"
 iext="input"
 inglob="*.${iext}"
 
@@ -37,13 +37,13 @@ oext="output"
 export outglob="*.${oext}"
 
 # Where is the working directory?
-workspace="/mnt/data/work"
+workspace="/mnt/data/chips/work"
 
 # Estimate the size of files generated as a multiple of input size
 workfactor=1.2
 
 # Where should logs be stored?
-logspace="/mnt/data/log"
+logspace="/mnt/data/chips/log"
 
 # Set a target system load visible to subprocesses
 export target_load=6.0
