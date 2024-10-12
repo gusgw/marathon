@@ -41,7 +41,7 @@ function cleanup_run {
     while read pid; do
         while kill -0 "${pid%% *}" 2> /dev/null; do
             >&2 echo "${STAMP}: ${pid} is still running - trying to stop it"
-            kill $pid || report $? "killing $pid"
+            kill "${pid%% *}" || report $? "killing $pid"
             sleep ${WAIT}
         done
     done < $ramdisk/workers
