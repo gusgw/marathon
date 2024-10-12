@@ -46,7 +46,7 @@ workfactor=1.2
 logspace="/mnt/data/log"
 
 # Set a target system load visible to subprocesses
-export target_load=4.1
+export target_load=6.0
 
 # Specify keys for decryption of inputs,
 # and for signing and encryption of outputs
