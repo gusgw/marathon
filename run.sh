@@ -74,9 +74,19 @@ check_dependency bc
 check_dependency parallel
 check_dependency niceload
 check_dependency stress
+check_dependency find
+check_dependency dd
+check_dependency mv
+check_dependency sleep
+check_dependency kill
+
+# Validate critical paths and files
+check_exists "${run_path}/rclone.conf"
+check_exists "${workspace}"
+check_exists "${logspace}"
 
 # Report settings
-log_setting "cleanup when done" "${clean}"
+log_setting "cleanup mode" "${clean}"
 log_setting "job to process" "${job}"
 log_setting "source for input data" "${input}"
 log_setting "destination for outputs" "${output}"
@@ -98,7 +108,30 @@ log_setting "encryption key" "$encrypt"
 # Load cleanup and prepare to trap signals
 . ${run_path}/cleanup.sh
 
-# run "${workspace}" "${log}" "${ramdisk}" "${job}" {}
+# run: Main worker function for processing individual input files
+# 
+# This is the core processing function executed by GNU Parallel for each
+# input file. It handles the actual computation work, applies load limiting,
+# and manages output generation. The function has two modes: test mode
+# (using stress for testing) and production mode (placeholder for real work).
+# 
+# Usage: run workspace logs ramdisk job input_file
+# Args:
+#   $1 - Workspace directory path
+#   $2 - Logs directory path
+#   $3 - Ramdisk path for temporary files
+#   $4 - Job name/identifier
+#   $5 - Input file to process
+# Globals:
+#   run_type - "test" or production mode
+#   NICE - Process nice value
+#   target_load - System load limit for niceload
+#   stress_* - Various stress test parameters
+#   n_test_waits - Number of wait cycles in test mode
+#   WAIT - Seconds between load checks
+# Environment:
+#   Uses GNU Parallel environment variables for job tracking
+# Returns: 0 on success, error code on failure
 function run {
     # The workspace is the top level folder
     local work="$1"
