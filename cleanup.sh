@@ -1,5 +1,30 @@
 cleanup_functions+=('cleanup_run')
 
+# cleanup_run: Main cleanup handler for graceful shutdown
+# 
+# Performs comprehensive cleanup when the job exits (normally or via signal):
+# - Terminates GNU Parallel and all worker processes
+# - Saves process status information
+# - Encrypts outputs if configured
+# - Uploads results and logs to remote storage
+# - Removes temporary files based on cleanup mode
+# - Optionally shuts down the instance (for cloud deployments)
+# 
+# WARNING: When using report() here, never use a third argument
+#          or it will cause an infinite loop!
+# 
+# Usage: cleanup_run exit_code
+# Args:
+#   $1 - Exit code to log (passed from cleanup function)
+# Globals:
+#   parallel_pid - PID of GNU Parallel process
+#   logs - Directory for log files
+#   work - Working directory
+#   clean - Cleanup mode (keep/output/gpg/all)
+#   encrypt_flag - Whether to encrypt outputs
+#   inglob/outglob - File patterns
+#   ramdisk - Temporary storage location
+# Returns: Exits with appropriate code or triggers shutdown
 function cleanup_run {
 
     ######################################
@@ -38,13 +63,28 @@ function cleanup_run {
     cp "/proc/$$/status" "$status"
     chmod u+w "$status"
 
-    while read pid; do
-        while kill -0 "${pid%% *}" 2> /dev/null; do
-            >&2 echo "${STAMP}: ${pid} is still running - trying to stop it"
-            kill "${pid%% *}" || report $? "killing $pid"
-            sleep ${WAIT}
-        done
-    done < $ramdisk/workers
+    if [[ -f "$ramdisk/workers" ]]; then
+        while read -r pid; do
+            # Extract just the PID if line contains more data
+            local actual_pid="${pid%% *}"
+            if [[ -n "$actual_pid" ]] && kill -0 "$actual_pid" 2>/dev/null; then
+                >&2 echo "${STAMP}: ${pid} is still running - trying to stop it"
+                # Try graceful termination first
+                kill -TERM "$actual_pid" 2>/dev/null || true
+                # Give process time to exit gracefully
+                local count=0
+                while [[ $count -lt 3 ]] && kill -0 "$actual_pid" 2>/dev/null; do
+                    sleep 1
+                    ((count++))
+                done
+                # Force kill if still running
+                if kill -0 "$actual_pid" 2>/dev/null; then
+                    >&2 echo "${STAMP}: Force killing ${actual_pid}"
+                    kill -KILL "$actual_pid" 2>/dev/null || true
+                fi
+            fi
+        done < "$ramdisk/workers"
+    fi
 
     ######################################################################
     # Encrypt the results
@@ -60,28 +100,34 @@ function cleanup_run {
 
     if ! [ "$clean" == "keep" ]; then
         >&2 echo "${STAMP}: removing downloaded input files"
-        for f in ${work}/${inglob}.gpg; do
-            rm -f ${f} || report $? "remove input file ${f}"
+        shopt -s nullglob
+        for f in "${work}"/${inglob}.gpg; do
+            rm -f "${f}" || report $FILING_ERROR "remove input file ${f}"
         done
-        for f in ${work}/${inglob}; do
-            rm -f ${f} || report $? "remove input file ${f}"
+        for f in "${work}"/${inglob}; do
+            rm -f "${f}" || report $FILING_ERROR "remove input file ${f}"
         done
+        shopt -u nullglob
     fi
 
     if [ "$clean" == "output" ] || [ "$clean" == "gpg" ] || [ "$clean" == "all" ]; then
         >&2 echo "${STAMP}: removing output files"
-        for f in "${work}/${outglob}"; do
-            rm -f ${f} || report $? "remove raw output ${f}"
+        shopt -s nullglob
+        for f in "${work}"/${outglob}; do
+            rm -f "${f}" || report $FILING_ERROR "remove raw output ${f}"
         done
+        shopt -u nullglob
     else
         >&2 echo "${STAMP}: keeping output files"
     fi
 
     if [ "$clean" == "gpg" ] || [ "$clean" == "all" ]; then
         >&2 echo "${STAMP}: removing GPG files"
-        for gpg in "${work}/${outglob}.gpg"; do
-            rm -f ${gpg} || report $? "remove signed and encrypted ${gpg}"
+        shopt -s nullglob
+        for gpg in "${work}"/${outglob}.gpg; do
+            rm -f "${gpg}" || report $FILING_ERROR "remove signed and encrypted ${gpg}"
         done
+        shopt -u nullglob
     else
         >&2 echo "${STAMP}: keeping GPG files"
     fi
@@ -95,16 +141,16 @@ function cleanup_run {
                 --config "${run_path}/rclone.conf" \
                 --log-level WARNING \
                 --transfers "${OUTBOUND_TRANSFERS}" ||\
-        report $? "sending logs to output folder"
+        report $NETWORK_ERROR "sending logs to output folder"
 
     if [ "$clean" == "all" ]; then
-        rm -rf ${work} || report $? "removing work folder"
+        rm -rf ${work} || report $FILING_ERROR "removing work folder"
     else
         >&2 echo "${STAMP}: keeping work folder"
     fi
 
     if [ "$clean" == "all" ]; then
-        rm -rf ${logs} || report $? "removing log folder"
+        rm -rf ${logs} || report $FILING_ERROR "removing log folder"
     else
         >&2 echo "${STAMP}: keeping log folder"
     fi
@@ -123,6 +169,23 @@ function cleanup_run {
 
 export parallel_cleanup_function="parallel_cleanup_run"
 
+# parallel_cleanup_run: Cleanup handler for GNU Parallel worker processes
+# 
+# Called when individual parallel jobs exit. Saves process status information
+# for debugging and monitoring. Uses GNU Parallel environment variables to
+# identify the specific job instance.
+# 
+# Usage: parallel_cleanup_run exit_code
+# Args:
+#   $1 - Exit code of the parallel job
+# Environment:
+#   PARALLEL_PID - PID of the GNU Parallel parent
+#   PARALLEL_JOBSLOT - Job slot number
+#   PARALLEL_SEQ - Job sequence number
+# Globals:
+#   logs - Directory for log files
+#   STAMP - Timestamp for file naming
+# Returns: The provided exit code
 function parallel_cleanup_run {
     local rc=$1
     >&2 echo "---"
@@ -131,7 +194,7 @@ function parallel_cleanup_run {
                         "${PARALLEL_SEQ}: exiting run cleanly with code ${rc}. . ."
     whoami="$$.${PARALLEL_PID}.${PARALLEL_JOBSLOT}.${PARALLEL_SEQ}"
     local status="${logs}/status/${whoami}.${STAMP}.parallel_cleanup.status"
-    cp "/proc/$$/status" "$status" || parallel_report $? "copy status files"
+    cp "/proc/$$/status" "$status" || parallel_report $FILING_ERROR "copy status files"
     chmod u+w "$status"
     >&2 echo "${STAMP}" "${PARALLEL_PID}" \
                         "${PARALLEL_JOBSLOT}" \
