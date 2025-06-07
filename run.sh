@@ -25,25 +25,25 @@ clean="$1"      # What should be cleaned up in the workspace?
 export job="$2"        # Give this run a name or number.
 
 # Specify inputs to fetch to workspace with rclone
-input="dummy:/mnt/data/chips/input"
-# input="aws-sydney-std:cavewall-tobermory-mnt-data-chips-input-test-0/"
+input="dummy:/mnt/data/marathon/input"
+# input="aws-sydney-std:cavewall-tobermory-mnt-data-marathon-input-test-0/"
 iext="input"
 inglob="*.${iext}"
 
 # Specify outputs to get from workspace with rclone when done
-export output="dummy:/mnt/data/chips/output"
-# export output="aws-sydney-std:cavewall-tobermory-mnt-data-chips-output-test-0/"
+export output="dummy:/mnt/data/marathon/output"
+# export output="aws-sydney-std:cavewall-tobermory-mnt-data-marathon-output-test-0/"
 oext="output"
 export outglob="*.${oext}"
 
 # Where is the working directory?
-workspace="/mnt/data/chips/work"
+workspace="/mnt/data/marathon/work"
 
 # Estimate the size of files generated as a multiple of input size
 workfactor=1.2
 
 # Where should logs be stored?
-logspace="/mnt/data/chips/log"
+logspace="/mnt/data/marathon/log"
 
 # Set a target system load visible to subprocesses
 export target_load=6.0
@@ -109,12 +109,12 @@ log_setting "encryption key" "$encrypt"
 . ${run_path}/cleanup.sh
 
 # run: Main worker function for processing individual input files
-# 
+#
 # This is the core processing function executed by GNU Parallel for each
 # input file. It handles the actual computation work, applies load limiting,
 # and manages output generation. The function has two modes: test mode
 # (using stress for testing) and production mode (placeholder for real work).
-# 
+#
 # Usage: run workspace logs ramdisk job input_file
 # Args:
 #   $1 - Workspace directory path
