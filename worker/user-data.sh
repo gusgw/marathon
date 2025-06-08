@@ -83,7 +83,13 @@ if [ -b /dev/nvme1n1 ]; then
     mkfs.ext4 /dev/nvme1n1 || error_exit "Failed to format /dev/nvme1n1"
     mkdir -p /mnt/data || error_exit "Failed to create /mnt/data"
     mount /dev/nvme1n1 /mnt/data || error_exit "Failed to mount /dev/nvme1n1"
-    mkdir -p /mnt/data/log || error_exit "Failed to create log directory"
+    # Create organized log directory structure
+    mkdir -p /mnt/data/log/jobs || error_exit "Failed to create jobs log directory"
+    mkdir -p /mnt/data/log/system || error_exit "Failed to create system log directory"
+    mkdir -p /mnt/data/log/transfers || error_exit "Failed to create transfers log directory"
+    mkdir -p /mnt/data/log/reports/daily || error_exit "Failed to create daily reports directory"
+    mkdir -p /mnt/data/log/reports/failures || error_exit "Failed to create failures directory"
+    mkdir -p /mnt/data/log/reports/performance || error_exit "Failed to create performance directory"
     chown --recursive admin /mnt/data || error_exit "Failed to set ownership on /mnt/data"
 else
     error_exit "NVMe device /dev/nvme1n1 not found"
