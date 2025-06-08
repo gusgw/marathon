@@ -132,6 +132,36 @@ function cleanup_run {
         >&2 echo "${STAMP}: keeping GPG files"
     fi
 
+    # Generate metadata before archiving logs
+    >&2 echo "${STAMP}: generating job metadata"
+    if command -v create_job_manifest >/dev/null 2>&1; then
+        create_job_manifest "${rc}"
+    fi
+    
+    # Update job index
+    if command -v update_job_index >/dev/null 2>&1; then
+        local job_status="completed"
+        if [[ "${rc}" -ne 0 ]]; then
+            job_status="failed"
+        fi
+        update_job_index "${job_status}"
+    fi
+    
+    # Update error index if job failed
+    if [[ "${rc}" -ne 0 ]] && command -v update_error_index >/dev/null 2>&1; then
+        update_error_index "${rc}" "Job failed with exit code ${rc}"
+    fi
+    
+    # Generate performance report
+    if command -v create_performance_report >/dev/null 2>&1; then
+        create_performance_report
+    fi
+    
+    # Generate daily summary
+    if command -v generate_daily_summary >/dev/null 2>&1; then
+        generate_daily_summary
+    fi
+    
     local log_archive="${work}/${STAMP}.${job}.$$.logs.tar.xz"
     savewd="$(pwd)"
     cd "${logspace}" && tar Jcvf "${log_archive}" "${job}/"

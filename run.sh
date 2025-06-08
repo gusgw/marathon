@@ -105,6 +105,9 @@ log_setting "encryption key" "$encrypt"
 # Load AWS specific routines
 . ${run_path}/aws.sh
 
+# Load metadata generation functions
+. ${run_path}/metadata.sh
+
 # Load cleanup and prepare to trap signals
 . ${run_path}/cleanup.sh
 
