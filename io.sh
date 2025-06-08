@@ -1,3 +1,8 @@
+# Load retry mechanism if available
+if [[ -f "${run_path}/retry.sh" ]]; then
+    . "${run_path}/retry.sh"
+fi
+
 # get_inputs: Download input files from remote storage using rclone
 # 
 # Synchronizes input files matching the global inglob pattern from the
@@ -15,24 +20,48 @@
 # Returns: 0 on success, reports error on failure
 function get_inputs {
 
-    nice -n "${NICE}" rclone sync \
-                "${input}/" \
-                "${work}/" \
-                --config "${run_path}/rclone.conf" \
-                --log-level WARNING \
-                --log-file "${logs}/${STAMP}.${job}.rclone.input.log" \
-                --transfers "${INBOUND_TRANSFERS}" \
-                --include "${inglob}.gpg" ||\
-        report $NETWORK_ERROR "download encrypted input data"
-    nice -n "${NICE}" rclone sync \
-                "${input}/" \
-                "${work}/" \
-                --config "${run_path}/rclone.conf" \
-                --log-level WARNING \
-                --log-file "${logs}/${STAMP}.${job}.rclone.input.log" \
-                --transfers "${INBOUND_TRANSFERS}" \
-                --include "${inglob}" ||\
-        report $NETWORK_ERROR "download input data"
+    if command -v retry_rclone_operation >/dev/null 2>&1; then
+        retry_rclone_operation nice -n "${NICE}" rclone sync \
+                    "${input}/" \
+                    "${work}/" \
+                    --config "${run_path}/rclone.conf" \
+                    --log-level WARNING \
+                    --log-file "${logs_transfers}/${STAMP}.${job}.rclone.input.log" \
+                    --transfers "${INBOUND_TRANSFERS}" \
+                    --include "${inglob}.gpg" ||\
+            report $NETWORK_ERROR "download encrypted input data"
+    else
+        nice -n "${NICE}" rclone sync \
+                    "${input}/" \
+                    "${work}/" \
+                    --config "${run_path}/rclone.conf" \
+                    --log-level WARNING \
+                    --log-file "${logs_transfers}/${STAMP}.${job}.rclone.input.log" \
+                    --transfers "${INBOUND_TRANSFERS}" \
+                    --include "${inglob}.gpg" ||\
+            report $NETWORK_ERROR "download encrypted input data"
+    fi
+    if command -v retry_rclone_operation >/dev/null 2>&1; then
+        retry_rclone_operation nice -n "${NICE}" rclone sync \
+                    "${input}/" \
+                    "${work}/" \
+                    --config "${run_path}/rclone.conf" \
+                    --log-level WARNING \
+                    --log-file "${logs_transfers}/${STAMP}.${job}.rclone.input.log" \
+                    --transfers "${INBOUND_TRANSFERS}" \
+                    --include "${inglob}" ||\
+            report $NETWORK_ERROR "download input data"
+    else
+        nice -n "${NICE}" rclone sync \
+                    "${input}/" \
+                    "${work}/" \
+                    --config "${run_path}/rclone.conf" \
+                    --log-level WARNING \
+                    --log-file "${logs_transfers}/${STAMP}.${job}.rclone.input.log" \
+                    --transfers "${INBOUND_TRANSFERS}" \
+                    --include "${inglob}" ||\
+            report $NETWORK_ERROR "download input data"
+    fi
 
     return 0
 }
@@ -71,9 +100,9 @@ function decrypt_inputs {
             local di_parallel_pid=$!
             while kill -0 "$di_parallel_pid" 2> /dev/null; do
                 sleep ${WAIT}
-                load_report "${job} decrypt"  "${logs}/${STAMP}.${job}.$$.load"
+                load_report "${job} decrypt"  "${logs_system:-${logs}}/${STAMP}.${job}.$$.load"
                 free_memory_report "${job} gpg" \
-                                   "${logs}/${STAMP}.${job}.$$.free"
+                                   "${logs_system:-${logs}}/${STAMP}.${job}.$$.free"
             done
         fi
         break
@@ -145,25 +174,49 @@ function send_outputs {
 
     # for file in ${work}/${outglob}.gpg; do
     if [ "${encrypt_flag}" == "yes" ]; then
-        nice -n "${NICE}" rclone copy \
-                "${work}/" \
-                "${output}/" \
-                --config "${run_path}/rclone.conf" \
-                --log-level WARNING \
-                --log-file "${logs}/${STAMP}.${job}.rclone.output.log" \
-                --include "${outglob}.gpg" \
-                --transfers "${OUTBOUND_TRANSFERS}" ||\
-            report $NETWORK_ERROR "save encrypted results"
+        if command -v retry_rclone_operation >/dev/null 2>&1; then
+            retry_rclone_operation nice -n "${NICE}" rclone copy \
+                    "${work}/" \
+                    "${output}/" \
+                    --config "${run_path}/rclone.conf" \
+                    --log-level WARNING \
+                    --log-file "${logs_transfers}/${STAMP}.${job}.rclone.output.log" \
+                    --include "${outglob}.gpg" \
+                    --transfers "${OUTBOUND_TRANSFERS}" ||\
+                report $NETWORK_ERROR "save encrypted results"
+        else
+            nice -n "${NICE}" rclone copy \
+                    "${work}/" \
+                    "${output}/" \
+                    --config "${run_path}/rclone.conf" \
+                    --log-level WARNING \
+                    --log-file "${logs_transfers}/${STAMP}.${job}.rclone.output.log" \
+                    --include "${outglob}.gpg" \
+                    --transfers "${OUTBOUND_TRANSFERS}" ||\
+                report $NETWORK_ERROR "save encrypted results"
+        fi
     else
-        nice -n "${NICE}" rclone copy \
-                "${work}/" \
-                "${output}/" \
-                --config "${run_path}/rclone.conf" \
-                --log-level WARNING \
-                --log-file "${logs}/${STAMP}.${job}.rclone.output.log" \
-                --include "${outglob}" \
-                --transfers "${OUTBOUND_TRANSFERS}" ||\
-            report $NETWORK_ERROR "save results"
+        if command -v retry_rclone_operation >/dev/null 2>&1; then
+            retry_rclone_operation nice -n "${NICE}" rclone copy \
+                    "${work}/" \
+                    "${output}/" \
+                    --config "${run_path}/rclone.conf" \
+                    --log-level WARNING \
+                    --log-file "${logs_transfers}/${STAMP}.${job}.rclone.output.log" \
+                    --include "${outglob}" \
+                    --transfers "${OUTBOUND_TRANSFERS}" ||\
+                report $NETWORK_ERROR "save results"
+        else
+            nice -n "${NICE}" rclone copy \
+                    "${work}/" \
+                    "${output}/" \
+                    --config "${run_path}/rclone.conf" \
+                    --log-level WARNING \
+                    --log-file "${logs_transfers}/${STAMP}.${job}.rclone.output.log" \
+                    --include "${outglob}" \
+                    --transfers "${OUTBOUND_TRANSFERS}" ||\
+                report $NETWORK_ERROR "save results"
+        fi
     fi
     return 0
 }
