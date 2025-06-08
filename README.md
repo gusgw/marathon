@@ -28,6 +28,13 @@ Marathon is a robust bash-based framework for running embarrassingly parallel co
 - **Graceful Shutdown**: Comprehensive cleanup with signal handling and data preservation
 - **Load Management**: Automatic system load limiting to prevent resource exhaustion
 - **Flexible Configuration**: Easily customizable for different workloads and environments
+- **Enhanced Logging**: Date-organized log structure with separate directories for jobs, system metrics, and transfers
+- **Job Metadata**: Automatic generation of job manifests with checksums and resource usage
+- **Performance Tracking**: CSV-based metrics collection for trend analysis
+- **Log Archival**: Automatic rotation and compression of old logs with configurable retention
+- **Health Monitoring**: Built-in health check endpoint for worker status verification
+- **Retry Mechanism**: Exponential backoff retry for transient failures in network operations
+- **Error Tracking**: Dedicated error index and failure logs for troubleshooting
 
 ## Architecture
 
@@ -40,13 +47,25 @@ marathon/
 ├── io.sh              # Data transfer operations (rclone)
 ├── aws.sh             # AWS-specific functionality
 ├── cleanup.sh         # Cleanup and signal handlers
+├── metadata.sh        # Job metadata and reporting functions
+├── archive.sh         # Log rotation and archival utilities
+├── retry.sh           # Retry mechanism with exponential backoff
+├── health.sh          # Health check endpoint for monitoring
 ├── bump/              # Utility function library
 │   ├── bump.sh        # Core utility functions
 │   ├── parallel.sh    # GNU Parallel-safe functions
 │   └── return_codes.sh # Standardized exit codes
 ├── worker/            # AWS deployment scripts
 │   └── user-data.sh   # EC2 instance initialization
-└── test/              # Test scripts
+├── test/              # Basic test scripts
+│   ├── test.sh        # Process hierarchy tests
+│   ├── one.sh         # Single process test
+│   ├── two.sh         # Dual process test
+│   └── three.sh       # Triple process test
+├── test_marathon.sh   # Comprehensive test suite
+├── test_cleanup_modes.sh # Cleanup mode verification
+├── test_performance.sh # Performance and stress tests
+└── test_retry.sh      # Retry mechanism tests
 ```
 
 ### Execution Flow
@@ -267,13 +286,77 @@ Create an IAM role with necessary permissions:
 
 ### Logging
 
-Comprehensive logs are generated in `${logspace}/${job}/`:
+Marathon uses an organized, date-based logging structure:
 
-- `${STAMP}.${job}.*.log` - Main execution logs
-- `${STAMP}.${job}.*.load` - System load measurements
-- `${STAMP}.${job}.*.memory` - Memory usage tracking
-- `${STAMP}.${job}.*.free` - Available memory logs
-- `status/*.status` - Process status snapshots
+#### Log Directory Structure
+
+```
+${logspace}/
+├── jobs/                      # Job-specific logs
+│   └── ${job}/
+│       ├── manifest.json      # Job metadata with checksums
+│       ├── *.log             # Execution logs
+│       ├── gpg/              # GPG operation logs
+│       ├── run/              # Parallel job logs
+│       └── status/           # Process status snapshots
+├── system/                    # System metrics organized by date
+│   └── YYYY/MM/DD/
+│       ├── *.load            # System load measurements
+│       ├── *.memory          # Memory usage tracking
+│       └── *.free            # Available memory logs
+├── transfers/                 # Data transfer logs by date
+│   └── YYYY/MM/DD/
+│       ├── *.rclone.input.log  # Input transfer logs
+│       └── *.rclone.output.log # Output transfer logs
+└── reports/                   # Aggregated reports and indices
+    ├── job_index.txt         # Central job registry
+    ├── error_index.txt       # Failed job tracking
+    ├── daily/YYYY/MM/DD/     # Daily summaries
+    │   └── summary.txt
+    ├── performance/          # Performance metrics
+    │   └── metrics_YYYYMM.csv
+    └── failures/             # Copies of failed job logs
+```
+
+#### Job Metadata
+
+Each job generates a `manifest.json` containing:
+- Job identification (ID, name, hostname, PID)
+- Timestamps (start and end times)
+- Input/output file listings with SHA256 checksums
+- File sizes for all inputs and outputs
+- Resource usage statistics
+- Exit code and status
+
+#### Performance Metrics
+
+Performance data is collected in CSV format:
+- Job duration and timestamps
+- Maximum memory usage
+- Average system load
+- Input/output data sizes
+- Suitable for trend analysis and optimization
+
+#### Log Archival
+
+Use the archive utility to manage log retention:
+
+```bash
+# Archive logs older than 7 days
+./archive.sh rotate 7
+
+# Remove archives older than 90 days
+./archive.sh clean 90
+
+# Archive completed work directories
+./archive.sh work
+
+# Generate archive summary report
+./archive.sh report
+
+# Run all maintenance tasks
+./archive.sh all
+```
 
 ## Monitoring
 
@@ -283,14 +366,43 @@ Monitor job progress in real-time:
 
 ```bash
 # Watch parallel job progress
-tail -f /mnt/logs/myjob/*.parallel.log
+tail -f ${logspace}/jobs/${job}/*.parallel.log
 
 # Monitor system load
-tail -f /mnt/logs/myjob/*.load
+tail -f ${logspace}/system/$(date +%Y/%m/%d)/*.load
 
 # Check worker status
-cat /dev/shm/myjob-*/workers
+cat /dev/shm/${job}-*/workers
+
+# View recent transfer activity
+tail -f ${logspace}/transfers/$(date +%Y/%m/%d)/*.log
 ```
+
+### Health Checks
+
+Marathon includes a built-in health check system:
+
+```bash
+# Run single health check
+./health.sh check
+
+# Get JSON health status
+./health.sh json
+
+# Start HTTP health endpoint (port 8080)
+./health.sh serve
+
+# Use custom port
+./health.sh serve 8081
+```
+
+Health checks verify:
+- Critical directories exist
+- Sufficient disk space (>10% free)
+- Required tools available (rclone, GNU Parallel)
+- System load within limits
+- Adequate memory available
+- Recent error rates
 
 ### Resource Reports
 
@@ -299,15 +411,44 @@ The framework continuously logs:
 - Per-process memory usage (VmHWM, VmRSS)
 - Available system memory and swap
 - Worker process status
+- Transfer rates and progress
+- Job completion statistics
 
 ## Cleanup Options
 
-Control post-execution cleanup with the `clean` parameter:
+Control post-execution cleanup behavior with the first parameter to `run.sh`:
 
-- **`keep`**: Preserve all files (workspace, logs, outputs)
-- **`output`**: Remove output files, keep inputs and logs
-- **`gpg`**: Remove encrypted files, keep raw outputs
-- **`all`**: Complete cleanup and shutdown (default for AWS)
+```bash
+./run.sh [cleanup_mode] [job_name]
+```
+
+### Cleanup Modes
+
+- **`keep`**: Preserve all files after job completion
+  - Retains: Work directory, log directory, all input/output files
+  - Use case: Development, debugging, or when you need to inspect intermediate files
+
+- **`output`**: Clean work and logs, keep only output archive
+  - Retains: Output archive in `${output}` directory
+  - Removes: Work directory, job log directory
+  - Use case: Production runs where only final results matter
+
+- **`gpg`**: Keep only encrypted files, remove unencrypted data
+  - Retains: Work directory with only `*.gpg` files, log directory
+  - Removes: All unencrypted files from work directory
+  - Use case: Security-sensitive environments requiring encrypted data only
+
+- **`all`**: Complete cleanup (default for AWS)
+  - Retains: Output archive only
+  - Removes: Work directory, job log directory
+  - Use case: Cloud deployments to minimize storage costs
+
+### Important Notes
+
+- System logs (`logs/system/`) and reports (`logs/reports/`) are **always retained** regardless of cleanup mode
+- Transfer logs (`logs/transfers/`) are organized by date and retained for troubleshooting
+- The output archive is always created and uploaded to the configured output location
+- Job metadata and performance metrics are generated before cleanup occurs
 
 ## Troubleshooting
 
@@ -355,16 +496,101 @@ export PARALLEL="--verbose"  # Verbose GNU Parallel
 
 ### Testing
 
-Run the test suite:
+Marathon includes comprehensive test suites to verify all functionality:
+
+#### Basic Process Tests
+
+Test process hierarchy and signal handling:
 
 ```bash
-# Full test
+# Full process test
 ./test/test.sh
 
 # Individual tests
 ./test/one.sh   # Single process test
 ./test/two.sh   # Dual process test
 ./test/three.sh # Triple process test
+```
+
+#### Comprehensive Test Suite
+
+Run all framework tests to verify proper operation:
+
+```bash
+# Run complete test suite
+./test_marathon.sh
+
+# Tests include:
+# - Directory structure creation
+# - Metadata generation
+# - All cleanup modes
+# - Resource monitoring
+# - Health checks
+# - Archive system
+# - Retry mechanism
+# - Transfer logging
+# - Error tracking
+```
+
+#### Cleanup Mode Tests
+
+Verify each cleanup mode behaves correctly:
+
+```bash
+# Test all cleanup modes with detailed output
+./test_cleanup_modes.sh
+
+# This will run jobs with each mode (keep, output, gpg, all)
+# and verify that the correct files are retained/removed
+```
+
+#### Performance Tests
+
+Test system under load and verify performance tracking:
+
+```bash
+# Run performance test suite
+./test_performance.sh
+
+# Configurable options:
+export PERF_TEST_DURATION=60      # Test duration in seconds
+export PERF_TEST_PARALLEL=8       # Number of parallel jobs
+./test_performance.sh
+
+# Tests include:
+# - Parallel job execution
+# - Memory usage tracking
+# - Load average monitoring
+# - Transfer performance
+# - Concurrent job stress test
+# - Performance report generation
+```
+
+#### Retry Mechanism Tests
+
+Verify retry logic and exponential backoff:
+
+```bash
+# Test retry functionality
+./test_retry.sh
+
+# Tests include:
+# - Successful retry after failures
+# - Retry exhaustion handling
+# - Non-retryable error detection
+# - Exponential backoff timing
+# - Retry policy configuration
+# - Rclone-specific retry wrapper
+# - Retry metrics recording
+# - Error code classification
+```
+
+#### Making Tests Executable
+
+Ensure all test scripts are executable:
+
+```bash
+chmod +x test*.sh test/*.sh
 ```
 
 ### Code Quality
