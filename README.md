@@ -193,12 +193,70 @@ region = us-east-1
 ./run.sh all myjob      # Full cleanup (default)
 ```
 
+### Step-by-Step Guide
+
+1. **Prepare Input Data**
+   ```bash
+   # Upload input files to cloud storage
+   rclone copy /local/input/path remote:bucket/input/
+   ```
+
+2. **Configure Job Settings**
+   ```bash
+   # Edit run.sh to set job parameters
+   export job="analysis-2025-01"  # Unique job identifier
+   export MAX_SUBPROCESSES=8       # Adjust for your CPU cores
+   export input="remote:bucket/input"
+   export output="remote:bucket/output"
+   ```
+
+3. **Run the Job**
+   ```bash
+   # Execute with desired cleanup mode
+   ./run.sh keep analysis-2025-01
+   ```
+
+4. **Monitor Progress**
+   ```bash
+   # Watch real-time logs
+   tail -f /mnt/logs/jobs/analysis-2025-01/*.log
+   
+   # Check system metrics
+   tail -f /mnt/logs/system/$(date +%Y/%m/%d)/*.load
+   ```
+
+5. **Retrieve Results**
+   ```bash
+   # Download completed outputs
+   rclone copy remote:bucket/output/ /local/output/path/
+   
+   # Check job manifest
+   cat /mnt/logs/jobs/analysis-2025-01/manifest.json
+   ```
+
 ### Test Mode
 
 Run the test suite to verify process hierarchy and signal handling:
 
 ```bash
 ./test/test.sh
+```
+
+### Running All Tests
+
+A comprehensive test script is available to run all tests:
+
+```bash
+# Run all tests with detailed output
+./test_all.sh
+
+# This executes:
+# - Basic process hierarchy tests
+# - Marathon framework tests
+# - Cleanup mode verification
+# - Performance tests
+# - Retry mechanism tests
+# - Quick report verification
 ```
 
 ### Custom Job Function
@@ -601,6 +659,77 @@ The codebase follows these standards:
 - Proper quoting for variable expansion
 - Signal-safe operations in cleanup handlers
 - GNU Parallel-safe function variants
+
+## Directory Structure During Execution
+
+### Workspace Directory
+
+During job execution, Marathon creates this structure:
+
+```
+${workspace}/
+├── ${job}/                # Job-specific workspace
+│   ├── input/            # Downloaded input files
+│   │   ├── file1.input
+│   │   └── file2.input.gpg (if encrypted)
+│   ├── work/             # Active processing directory
+│   │   ├── file1.output  # Generated output files
+│   │   └── file2.output
+│   └── output/           # Staging for upload
+│       ├── file1.output
+│       └── file2.output.gpg (if encryption enabled)
+└── lost+found/           # Recovery directory for interrupted jobs
+```
+
+### Logs Directory Structure
+
+See [Logging](#logging) section for detailed log directory structure.
+
+### Status Directory (RAM Disk)
+
+During execution, process status is tracked in:
+
+```
+/dev/shm/
+└── ${job}-${PID}/
+    ├── workers           # Active worker PIDs
+    ├── master            # Master process PID
+    └── status            # Current job status
+```
+
+## Script Descriptions
+
+### Core Scripts
+
+- **run.sh**: Main orchestrator that coordinates the entire job execution
+- **settings.sh**: Sets up environment variables, directories, and paths
+- **io.sh**: Handles all data transfers using rclone (upload/download)
+- **aws.sh**: AWS-specific functions including spot interruption detection
+- **cleanup.sh**: Manages graceful shutdown and cleanup operations
+- **metadata.sh**: Creates job manifests and performance reports
+- **archive.sh**: Rotates and compresses old logs
+- **retry.sh**: Implements exponential backoff retry for failed operations
+- **health.sh**: Provides health check endpoint and system status
+
+### Utility Scripts (bump/)
+
+- **bump.sh**: Core utility functions (logging, validation, dependencies)
+- **parallel.sh**: GNU Parallel-safe versions of utility functions
+- **return_codes.sh**: Standardized exit codes for consistent error handling
+
+### Test Scripts
+
+- **test_marathon.sh**: Comprehensive framework testing
+- **test_cleanup_modes.sh**: Verifies all cleanup modes work correctly
+- **test_performance.sh**: Tests system under load
+- **test_retry.sh**: Verifies retry mechanism
+- **test_report.sh**: Quick smoke test
+- **test_basic.sh**: Basic functionality test
+- **test_summary.sh**: Tests summary generation
+
+### Demonstration Scripts
+
+- **demo_cleanup.sh**: Interactive demonstration of cleanup modes
 
 ## Projects Using Marathon
 
