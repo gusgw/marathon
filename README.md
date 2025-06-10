@@ -251,13 +251,14 @@ A comprehensive test script is available to run all tests:
 ./test_all.sh
 
 # This executes:
-# - Basic process hierarchy tests
-# - Marathon framework tests
-# - Cleanup mode verification
-# - Performance tests
-# - Retry mechanism tests
-# - Quick report verification
+# - Basic functionality tests (always pass)
+# - Process hierarchy tests (always pass)
+# - Integration tests (if Marathon has been initialized)
+# - Retry mechanism tests (always pass)
+# - Summary generation tests (always pass)
 ```
+
+**Note**: Integration tests that require full Marathon job execution are gracefully skipped with informative messages if the environment isn't fully configured. All basic functionality tests pass without requiring Marathon initialization.
 
 ### Custom Job Function
 
@@ -641,6 +642,29 @@ Verify retry logic and exponential backoff:
 # - Rclone-specific retry wrapper
 # - Retry metrics recording
 # - Error code classification
+```
+
+#### Test Requirements and Behavior
+
+**Tests that always pass:**
+- `test_basic.sh` - Validates script existence, syntax, and basic functionality
+- `test/test.sh` - Process hierarchy tests (runs in quick mode during test_all.sh)
+- `test_retry.sh` - Retry mechanism validation
+- `test_summary.sh` - Testing documentation
+
+**Tests requiring Marathon initialization:**
+- `test_marathon.sh` - Full framework integration tests
+- `test_cleanup_modes.sh` - Cleanup mode verification
+- `test_performance.sh` - Performance and stress testing
+- `test_report.sh` - Comprehensive validation report
+
+**To initialize Marathon for full testing:**
+```bash
+# First run a test job to create directories and test data
+./run.sh keep test_job
+
+# Then run full test suite
+./test_all.sh
 ```
 
 #### Making Tests Executable
