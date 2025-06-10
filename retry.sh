@@ -91,7 +91,7 @@ function retry_with_backoff {
         
         # Check if error is retryable
         if ! is_retryable_error ${exit_code}; then
-            log_error "Non-retryable error (exit code: ${exit_code}), aborting retries"
+            echo "Non-retryable error (exit code: ${exit_code}), aborting retries" >&2
             return ${exit_code}
         fi
         
