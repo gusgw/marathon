@@ -1,5 +1,51 @@
 #!/bin/bash
-# test_basic.sh: Simple tests for core marathon functionality
+# test_basic.sh - Basic functionality tests for Marathon framework
+#
+# DESCRIPTION:
+#   This script performs fundamental tests to ensure Marathon's core
+#   functionality is working correctly. It validates script existence,
+#   syntax, basic operations, and checks that the framework has been
+#   properly initialized with required directories and files.
+#
+# USAGE:
+#   ./test_basic.sh
+#
+# WHAT IT TESTS:
+#   1. Script existence - All core scripts present and executable
+#   2. Script syntax - All shell scripts have valid bash syntax
+#   3. Health check - JSON output functionality works
+#   4. Demo script - Basic demonstration runs successfully
+#   5. Archive help - Archive script responds to commands
+#   6. Directory structure - All log directories created
+#   7. Report files - Job index and performance metrics exist
+#   8. Output archives - Completed job archives present
+#   9. Job manifests - Manifest files with proper content
+#   10. System metrics - CPU/memory metrics being collected
+#
+# EXPECTED OUTCOMES:
+#   - All scripts (metadata.sh, archive.sh, retry.sh, health.sh) executable
+#   - No syntax errors in any .sh files
+#   - Health check returns valid JSON with "status" field
+#   - Demo script outputs "KEEP mode" message
+#   - Archive script shows usage information
+#   - Log directories exist under /mnt/data/marathon/log/
+#   - Job index contains completed job entries
+#   - Performance metrics CSV exists for current month
+#   - At least one .tar.xz archive in output directory
+#   - Manifests contain input_files and sha256 checksums
+#   - System metrics collected in date-based directories
+#
+# SPECIAL REQUIREMENTS:
+#   - Marathon must have completed at least one job
+#   - Read access to /mnt/data/marathon directories
+#   - All scripts must be marked executable
+#   - Current date used for metrics directory checks
+#
+# NOTES:
+#   - This is a lightweight test suite for quick validation
+#   - Focuses on existence checks rather than functionality
+#   - Color-coded output with pass/fail counts
+#   - Exit code 0 if all tests pass, 1 if any fail
 
 set -e
 

@@ -1,5 +1,45 @@
 #!/bin/bash
-# test_report.sh: Quick test report for marathon functionality
+# test_report.sh - Quick validation report for Marathon framework installation
+#
+# DESCRIPTION:
+#   This script provides a rapid health check of the Marathon framework by
+#   validating that all required scripts exist, are executable, and that
+#   the system has been properly initialized with the expected directory
+#   structure and output files. It's designed as a quick smoke test.
+#
+# USAGE:
+#   ./test_report.sh
+#
+# WHAT IT TESTS:
+#   1. Core scripts existence and permissions (metadata.sh, archive.sh, etc)
+#   2. Test scripts availability and executable status
+#   3. Health check endpoint functionality
+#   4. Log directory structure (jobs/, system/, transfers/, reports/)
+#   5. Generated files (job index, performance metrics, manifests)
+#   6. System metrics collection and storage
+#
+# EXPECTED OUTCOMES:
+#   - All core scripts present and executable
+#   - Test scripts available for execution
+#   - Health check returns valid JSON
+#   - Log directories properly created
+#   - Job index file exists with completed jobs
+#   - Performance metrics CSV for current month
+#   - At least one job manifest found
+#   - Output archives present
+#   - System metrics being collected
+#   - 100% success rate for full functionality
+#
+# SPECIAL REQUIREMENTS:
+#   - Marathon must have run at least one job previously
+#   - Read access to /mnt/data/marathon directories
+#   - Scripts must be marked executable
+#
+# NOTES:
+#   - This is a quick validation, not a comprehensive test
+#   - Use test_marathon.sh for full integration testing
+#   - Exit code 0 if all checks pass, 1 if any fail
+#   - Results shown with checkmarks (✓) and X marks (✗)
 
 echo "Marathon Test Report"
 echo "==================="

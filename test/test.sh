@@ -1,4 +1,42 @@
-#! /bin/bash
+#!/bin/bash
+# test.sh - Process hierarchy and child tracking test
+#
+# DESCRIPTION:
+#   This script tests process tracking and child process management by
+#   launching a subprocess (one.sh) and monitoring its child processes
+#   over time. It demonstrates the ability to recursively find all
+#   descendant processes using the /proc filesystem.
+#
+# USAGE:
+#   cd test/
+#   ./test.sh
+#
+# WHAT IT TESTS:
+#   - Process spawning and tracking
+#   - Child process discovery via /proc filesystem
+#   - Recursive process tree traversal
+#   - Long-running process monitoring (10 minutes)
+#   - Process ID tracking across fork operations
+#
+# EXPECTED OUTCOMES:
+#   - Launches one.sh as a background process
+#   - Displays the main process ID ($$)
+#   - Shows the child process ID (one.sh)
+#   - Lists all descendant processes recursively
+#   - Updates every 10 seconds for 60 iterations
+#   - Demonstrates process tree relationships
+#
+# SPECIAL REQUIREMENTS:
+#   - /proc filesystem must be available (Linux)
+#   - one.sh, two.sh, three.sh must exist and be executable
+#   - hostnamectl command available for hostname
+#   - Sufficient permissions to read /proc entries
+#
+# NOTES:
+#   - Total runtime is approximately 10 minutes
+#   - Creates a multi-level process hierarchy
+#   - Useful for testing process cleanup mechanisms
+#   - Shows how Marathon tracks job subprocesses
 
 
 function set_stamp {

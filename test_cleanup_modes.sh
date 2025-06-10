@@ -1,8 +1,41 @@
 #!/bin/bash
-# test_cleanup_modes.sh: Focused test for marathon cleanup modes
+# test_cleanup_modes.sh - Detailed test of Marathon cleanup modes
 #
-# Tests each cleanup mode in detail to ensure files are retained/removed
-# according to the specified behavior.
+# DESCRIPTION:
+#   This script performs focused testing of each Marathon cleanup mode to
+#   verify that files are correctly retained or removed according to the
+#   specified behavior. It runs a test job with each cleanup mode and
+#   validates the resulting file system state.
+#
+# USAGE:
+#   ./test_cleanup_modes.sh
+#
+# WHAT IT TESTS:
+#   - keep mode: All files should be retained (work, logs, output)
+#   - output mode: Work and logs removed, output archive created
+#   - gpg mode: Only encrypted (.gpg) files retained in work directory
+#   - all mode: Everything removed except final output archive
+#   - System logs and reports are always retained regardless of mode
+#
+# EXPECTED OUTCOMES:
+#   For each cleanup mode:
+#   - Green checkmarks (✓) indicate expected behavior
+#   - Red X marks (✗) indicate unexpected file presence/absence
+#   - Detailed file listings show what remains after cleanup
+#   - System logs should always be preserved
+#   - Job should be recorded in job index
+#
+# SPECIAL REQUIREMENTS:
+#   - Write access to /mnt/data/marathon directories
+#   - Marathon framework must be properly configured
+#   - GNU Parallel and other dependencies installed
+#   - Run from Marathon root directory
+#
+# NOTES:
+#   - Uses unique job names with process ID to avoid conflicts
+#   - Color-coded output for easy result interpretation
+#   - Tests run sequentially to show progressive cleanup behavior
+#   - Each mode gets its own detailed report section
 
 set -e
 set -o pipefail

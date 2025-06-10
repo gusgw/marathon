@@ -1,8 +1,48 @@
 #!/bin/bash
-# test_performance.sh: Performance and stress tests for marathon
+# test_performance.sh - Performance and stress testing for Marathon framework
 #
-# Tests the framework under various load conditions and verifies
-# performance tracking features work correctly.
+# DESCRIPTION:
+#   This script runs comprehensive performance tests on the Marathon framework
+#   to validate its behavior under various load conditions. It tests parallel
+#   execution, memory tracking, CPU load monitoring, transfer performance,
+#   concurrent job handling, and performance report generation.
+#
+# USAGE:
+#   ./test_performance.sh
+#   
+#   Environment variables:
+#   - PERF_TEST_DURATION: Test duration in seconds (default: 30)
+#   - PERF_TEST_PARALLEL: Number of parallel jobs (default: 4)
+#
+# WHAT IT TESTS:
+#   1. Parallel execution - Runs multiple jobs simultaneously
+#   2. Memory tracking - Monitors memory usage during intensive operations
+#   3. Load monitoring - Tracks CPU load averages
+#   4. Transfer performance - Measures data transfer speeds
+#   5. Concurrent jobs - Tests multiple independent job executions
+#   6. Performance reports - Validates metric collection and reporting
+#
+# EXPECTED OUTCOMES:
+#   - All parallel jobs complete successfully
+#   - Memory usage statistics are recorded in .memory files
+#   - CPU load averages are tracked in .load files
+#   - Transfer logs show input/output operations
+#   - Concurrent jobs run without interference
+#   - Performance metrics CSV contains accurate data
+#   - Summary statistics show reasonable values
+#
+# SPECIAL REQUIREMENTS:
+#   - Sufficient disk space for test files (at least 500MB)
+#   - Write access to /mnt/data/marathon directories
+#   - stress utility installed for CPU/memory testing
+#   - dd command available for file generation
+#   - Multiple CPU cores for parallel testing
+#
+# NOTES:
+#   - Creates temporary test files that are cleaned up automatically
+#   - May temporarily increase system load during testing
+#   - Performance results vary based on system capabilities
+#   - All tests run sequentially to avoid interference
 
 set -e
 set -o pipefail

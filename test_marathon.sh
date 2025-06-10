@@ -1,8 +1,49 @@
 #!/bin/bash
-# test_marathon.sh: Comprehensive test suite for marathon framework
+# test_marathon.sh - Comprehensive test suite for the Marathon framework
 #
-# Tests all cleanup modes, verifies file/folder creation, and validates
-# that the enhanced logging and metadata features work correctly.
+# DESCRIPTION:
+#   This is the main integration test suite that validates all core features
+#   of the Marathon parallel computation framework. It tests cleanup modes,
+#   directory structure, metadata generation, resource monitoring, error
+#   tracking, and archival functionality.
+#
+# USAGE:
+#   ./test_marathon.sh
+#
+# WHAT IT TESTS:
+#   1. Directory structure creation (logs, jobs, system metrics, reports)
+#   2. Metadata generation (manifest.json, job index, performance metrics)
+#   3. All cleanup modes (keep, output, gpg, all)
+#   4. Resource monitoring (CPU load, memory usage, disk space)
+#   5. Health check endpoint functionality
+#   6. Archive system for old logs
+#   7. Retry mechanism with exponential backoff
+#   8. Transfer logging for rclone operations
+#   9. Error tracking and failure reporting
+#
+# EXPECTED OUTCOMES:
+#   - All tests should pass (green checkmarks)
+#   - Test environment is created in /mnt/data/marathon_test
+#   - Each cleanup mode behaves correctly:
+#     * keep: retains all files
+#     * output: removes work/logs, keeps output
+#     * gpg: keeps only encrypted files
+#     * all: removes everything except archived output
+#   - System metrics are collected and stored
+#   - Failed jobs appear in error index
+#   - All temporary test files are cleaned up
+#
+# SPECIAL REQUIREMENTS:
+#   - Requires write access to /mnt/data/marathon_test
+#   - Needs GNU Parallel, rclone, and other Marathon dependencies
+#   - Must be run from the Marathon root directory
+#   - May need sudo for some cleanup operations
+#
+# NOTES:
+#   - Creates and destroys test environment automatically
+#   - Uses color output (can be disabled by unsetting color vars)
+#   - Exit code 0 if all tests pass, 1 if any fail
+#   - Detailed test results shown with pass/fail counts
 
 set -e
 set -o pipefail

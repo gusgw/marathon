@@ -1,5 +1,38 @@
 #!/bin/bash
-# test_summary.sh: Summary of marathon testing capabilities
+# test_summary.sh - Overview and guide to Marathon's testing capabilities
+#
+# DESCRIPTION:
+#   This script provides a comprehensive overview of Marathon's testing
+#   suite, explaining what each test does, how to run them, and what
+#   functionality has been verified. It serves as documentation and a
+#   quick reference for developers and operators.
+#
+# USAGE:
+#   ./test_summary.sh
+#
+# WHAT IT DOES:
+#   - Lists all available test scripts with descriptions
+#   - Explains what each test verifies in detail
+#   - Provides instructions for running tests
+#   - Summarizes verified functionality
+#   - Highlights key improvements in the framework
+#
+# EXPECTED OUTPUT:
+#   - Structured documentation of testing capabilities
+#   - No actual tests are run by this script
+#   - Information-only output to help users understand testing
+#   - Lists test scripts in order of comprehensiveness
+#   - Shows checkmarks (✓) for verified features
+#
+# SPECIAL REQUIREMENTS:
+#   - None - this is a documentation script only
+#   - Test scripts should exist in the same directory
+#
+# NOTES:
+#   - Use this as a starting point to understand Marathon testing
+#   - Refer to individual test script headers for detailed info
+#   - Run test_marathon.sh for comprehensive validation
+#   - Run test_report.sh for a quick health check
 
 echo "Marathon Testing Suite Summary"
 echo "=============================="

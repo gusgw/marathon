@@ -1,8 +1,46 @@
 #!/bin/bash
-# test_retry.sh: Test retry mechanism with simulated failures
+# test_retry.sh - Test Marathon's retry mechanism with exponential backoff
 #
-# Tests the exponential backoff retry logic by simulating various
-# failure scenarios and verifying proper retry behavior.
+# DESCRIPTION:
+#   This script comprehensively tests Marathon's retry functionality, including
+#   exponential backoff, retry policies, error classification, and retry
+#   metrics. It simulates various failure scenarios to ensure the retry
+#   mechanism behaves correctly in production environments.
+#
+# USAGE:
+#   ./test_retry.sh
+#
+# WHAT IT TESTS:
+#   1. Command retry with eventual success - Verifies retry until success
+#   2. Retry exhaustion - Tests max retry limit enforcement
+#   3. Non-retryable errors - Ensures certain errors stop retries
+#   4. Exponential backoff timing - Validates increasing delay intervals
+#   5. Retry policy configurations - Tests critical/batch/normal policies
+#   6. Rclone retry wrapper - Special handling for transfer operations
+#   7. Retry metrics recording - Validates retry statistics collection
+#   8. Error code classification - Tests retryable vs non-retryable codes
+#
+# EXPECTED OUTCOMES:
+#   - Commands succeed after configured number of retries
+#   - Non-retryable errors stop immediately (exit codes 2, 126, etc)
+#   - Retryable errors trigger backoff (network errors, timeouts)
+#   - Backoff delays double each time (2s, 4s, 8s, etc)
+#   - Critical policy: 10 retries, 5s initial delay
+#   - Batch policy: 5 retries, 30s initial delay
+#   - Normal policy: 3 retries, 10s initial delay
+#   - Retry metrics are recorded in CSV format
+#
+# SPECIAL REQUIREMENTS:
+#   - Write access to /tmp for test logs and mock files
+#   - retry.sh must be in the current directory
+#   - bump utilities must be available in bump/
+#   - date command for timing measurements
+#
+# NOTES:
+#   - Uses mock commands to simulate failures deterministically
+#   - Creates temporary test directory cleaned up on exit
+#   - Fast retry delays used for quick test execution
+#   - All output color-coded for easy interpretation
 
 set -e
 set -o pipefail

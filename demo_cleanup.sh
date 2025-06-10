@@ -1,7 +1,41 @@
 #!/bin/bash
-# demo_cleanup.sh: Quick demonstration of cleanup modes
+# demo_cleanup.sh - Interactive demonstration of Marathon cleanup modes
 #
-# Shows what each cleanup mode does without running full jobs
+# DESCRIPTION:
+#   This script provides a visual demonstration of Marathon's four cleanup
+#   modes without actually running any jobs. It explains what files are
+#   retained or removed by each mode and suggests appropriate use cases.
+#   This is an educational tool for understanding cleanup behavior.
+#
+# USAGE:
+#   ./demo_cleanup.sh
+#
+# WHAT IT DEMONSTRATES:
+#   - KEEP mode: Retains all files (work, logs, input, output, encrypted)
+#   - OUTPUT mode: Removes work/logs, keeps only output archive
+#   - GPG mode: Keeps only encrypted files, removes unencrypted data
+#   - ALL mode: Complete cleanup, retains only output archive
+#   - Which system files are always retained regardless of mode
+#   - Current log directory structure
+#
+# EXPECTED OUTPUT:
+#   - Color-coded explanation of each cleanup mode
+#   - Green checkmarks (✓) for retained files
+#   - Red X marks (✗) for removed files
+#   - Use case recommendations for each mode
+#   - Important notes about system logs
+#   - Visual directory tree of log structure
+#
+# SPECIAL REQUIREMENTS:
+#   - None - this is a demonstration script only
+#   - No actual cleanup operations are performed
+#   - Checks if /mnt/data/marathon/log exists for structure display
+#
+# NOTES:
+#   - Use this to understand cleanup modes before running jobs
+#   - Actual cleanup behavior is implemented in cleanup.sh
+#   - System logs are never removed by any cleanup mode
+#   - Run test_cleanup_modes.sh to see modes in action
 
 echo "Marathon Cleanup Modes Demonstration"
 echo "===================================="
