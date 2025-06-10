@@ -25,7 +25,14 @@
 #   - Part of process hierarchy testing suite
 #   - Validates Marathon can track deeply nested processes
 
-for k in {1..60}; do
+# Check if we're in quick test mode
+if [[ "${QUICK_TEST:-no}" == "yes" ]]; then
+    MAX_ITERATIONS=3
+else
+    MAX_ITERATIONS=60
+fi
+
+for k in $(seq 1 $MAX_ITERATIONS); do
     echo "three: $$ $k"
     sleep 10
 done

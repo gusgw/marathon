@@ -110,13 +110,23 @@ function kids {
 }
 export -f kids
 
-./one.sh &
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+"${SCRIPT_DIR}/one.sh" &
 oneid=$!
 sleep 5
 echo "$$"
 echo "$oneid"
 echo $(kids "$oneid")
-for k in {1..60}; do
+# Check if we're in quick test mode
+if [[ "${QUICK_TEST:-no}" == "yes" ]]; then
+    MAX_ITERATIONS=3
+else
+    MAX_ITERATIONS=60
+fi
+
+for k in $(seq 1 $MAX_ITERATIONS); do
     echo "test: $k"
     echo "$$"
     echo "$oneid"

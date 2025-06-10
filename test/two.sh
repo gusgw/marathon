@@ -25,8 +25,18 @@
 #   - Part of process hierarchy testing suite
 #   - Shows how Marathon tracks nested subprocesses
 
-./three.sh &
-for k in {1..60}; do
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+"${SCRIPT_DIR}/three.sh" &
+# Check if we're in quick test mode
+if [[ "${QUICK_TEST:-no}" == "yes" ]]; then
+    MAX_ITERATIONS=3
+else
+    MAX_ITERATIONS=60
+fi
+
+for k in $(seq 1 $MAX_ITERATIONS); do
     echo "two: $$ $k"
     sleep 10
 done
