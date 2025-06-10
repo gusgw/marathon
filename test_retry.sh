@@ -280,7 +280,7 @@ test_error_classification() {
     
     # Test various error codes
     test_errors=(
-        "20:Network error:retryable"
+        "83:Network error:retryable"
         "124:Timeout error:retryable"
         "28:Curl timeout:retryable"
         "7:Curl connection failed:retryable"
@@ -288,6 +288,7 @@ test_error_classification() {
         "1:Generic error:non-retryable"
         "2:Misuse of shell:non-retryable"
         "126:Permission denied:non-retryable"
+        "20:Unknown error 20:non-retryable"
     )
     
     for test_case in "${test_errors[@]}"; do
