@@ -1,8 +1,44 @@
 #!/bin/bash
-# archive.sh: Log rotation and archiving utilities for marathon
 #
-# Provides functions to manage log retention, compress old logs,
-# and move completed jobs to archive directories.
+# archive.sh - Log rotation and archiving utilities for Marathon
+#
+# PURPOSE:
+#   Manages log retention and storage by archiving old logs, compressing
+#   completed job data, and maintaining archive directories. Helps prevent
+#   disk space issues while preserving historical data for analysis.
+#
+# USAGE:
+#   Can be sourced for functions or run directly:
+#   ./archive.sh {rotate|clean|work|report|all} [days]
+#
+# KEY FUNCTIONS:
+#   - archive_old_logs: Compress and move old logs to archive
+#   - clean_old_archives: Remove archives exceeding retention period
+#   - archive_completed_work: Move completed job workspaces
+#   - generate_archive_report: Create archive summary statistics
+#
+# DEPENDENCIES:
+#   - tar/gzip (for compression)
+#   - find (for locating old files)
+#   - realpath (for path manipulation)
+#   - Standard Unix utilities: du, cut, wc, grep
+#
+# ENVIRONMENT VARIABLES USED:
+#   - logspace: Base log directory
+#   - workspace: Base work directory
+#   - reports_base: Reports directory
+#   - DATE_PATH: Current date path (YYYY/MM/DD)
+#
+# DIRECTORY STRUCTURE:
+#   ${logspace}/archive/
+#     ├── YYYY/MM/jobs/      # Archived job logs
+#     ├── system/YYYY/MM/DD/ # Compressed system metrics
+#     └── transfers/YYYY/MM/DD/ # Compressed transfer logs
+#
+# RETENTION DEFAULTS:
+#   - Active logs: 7 days
+#   - Archived logs: 90 days
+#   - Work directories: 1 day after completion
 
 # archive_old_logs: Move and compress logs older than specified days
 #

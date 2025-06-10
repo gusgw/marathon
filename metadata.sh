@@ -1,7 +1,46 @@
-# metadata.sh: Functions for generating metadata and index files
+#! /bin/bash
 #
-# This script provides functions to create job manifests, update index files,
-# and generate summary reports for marathon job execution.
+# metadata.sh - Metadata generation and reporting utilities for Marathon
+#
+# PURPOSE:
+#   Creates comprehensive metadata about job execution including manifests,
+#   performance metrics, error tracking, and summary reports. Enables job
+#   tracking, troubleshooting, and performance analysis across runs.
+#
+# USAGE:
+#   This script is sourced by run.sh to provide metadata functions
+#   Should not be run directly
+#
+# KEY FUNCTIONS:
+#   - create_job_manifest: Generate JSON manifest with job details
+#   - update_job_index: Maintain central index of all jobs
+#   - update_error_index: Track failed jobs for troubleshooting
+#   - generate_daily_summary: Create daily execution reports
+#   - create_performance_report: Collect performance metrics
+#
+# DEPENDENCIES:
+#   - sha256sum (for file checksums)
+#   - Standard Unix utilities: stat, awk, grep, sort, du
+#   - JSON-compatible output formatting
+#
+# ENVIRONMENT VARIABLES USED:
+#   - job: Job identifier
+#   - logs/logs_base: Log directories
+#   - work: Working directory
+#   - input/output: rclone paths
+#   - inglob/outglob: File patterns
+#   - STAMP: Timestamp for job
+#   - HOSTNAME: System hostname
+#   - encrypt_flag: Encryption status
+#   - reports_base: Reports directory
+#   - DATE_* variables: Date components
+#
+# OUTPUT FILES:
+#   - manifest.json: Comprehensive job metadata
+#   - job_index.txt: Master list of all jobs
+#   - error_index.txt: Failed job tracking
+#   - daily/*/summary.txt: Daily summaries
+#   - performance/metrics_*.csv: Performance data
 
 # create_job_manifest: Generate a JSON manifest file for the current job
 #

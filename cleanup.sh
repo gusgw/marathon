@@ -1,3 +1,49 @@
+#! /bin/bash
+#
+# cleanup.sh - Graceful shutdown and cleanup routines for Marathon
+#
+# PURPOSE:
+#   Provides comprehensive cleanup functionality for both normal exits and
+#   signal-triggered shutdowns. Ensures all data is saved, processes are
+#   terminated cleanly, and resources are released properly.
+#
+# USAGE:
+#   This script is sourced by run.sh to register cleanup handlers
+#   Should not be run directly
+#
+# KEY FUNCTIONS:
+#   - cleanup_run: Main cleanup handler for orchestrator process
+#   - parallel_cleanup_run: Cleanup for individual parallel workers
+#   - Handles signal trapping and graceful termination
+#   - Manages data persistence before shutdown
+#   - Controls workspace cleanup based on mode
+#
+# DEPENDENCIES:
+#   - GNU Parallel (for job control)
+#   - rclone (for uploading logs)
+#   - tar/xz (for log archiving)
+#   - metadata.sh functions (if available)
+#   - Standard Unix utilities: kill, rm, sleep
+#
+# ENVIRONMENT VARIABLES USED:
+#   - parallel_pid: PID of GNU Parallel process
+#   - logs/logspace: Log directories
+#   - work/workspace: Working directories
+#   - clean: Cleanup mode (keep/output/gpg/all)
+#   - encrypt_flag: Whether encryption is enabled
+#   - inglob/outglob: File patterns
+#   - ramdisk: Temporary file location
+#   - output: rclone destination for results
+#   - STAMP: Timestamp for file naming
+#   - job: Job identifier
+#   - OUTBOUND_TRANSFERS: Parallel upload limit
+#
+# CLEANUP MODES:
+#   - keep: Preserve all files
+#   - output: Remove output files only
+#   - gpg: Remove output and encrypted files
+#   - all: Complete cleanup and optional shutdown
+
 cleanup_functions+=('cleanup_run')
 
 # cleanup_run: Main cleanup handler for graceful shutdown

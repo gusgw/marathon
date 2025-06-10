@@ -1,8 +1,48 @@
 #!/bin/bash
-# retry.sh: Retry mechanism with exponential backoff for marathon jobs
 #
-# Provides functions to implement retry logic for failed jobs with
-# configurable retry attempts and exponential backoff delays.
+# retry.sh - Retry mechanism with exponential backoff for Marathon
+#
+# PURPOSE:
+#   Implements intelligent retry logic for transient failures with exponential
+#   backoff. Distinguishes between retryable (network, timeout) and permanent
+#   errors. Provides specialized handling for rclone operations and configurable
+#   retry policies based on job criticality.
+#
+# USAGE:
+#   This script is sourced by io.sh to provide retry capabilities
+#   Can also be sourced independently for retry functionality
+#
+# KEY FUNCTIONS:
+#   - retry_with_backoff: Execute any command with retry logic
+#   - is_retryable_error: Determine if error should trigger retry
+#   - retry_rclone_operation: Specialized retry for rclone commands
+#   - configure_retry_policy: Adjust retry behavior by job type
+#   - record_retry_metrics: Track retry statistics for analysis
+#
+# DEPENDENCIES:
+#   - bump/return_codes.sh (for error code definitions)
+#   - metadata.sh functions (optional, for error tracking)
+#   - Standard Unix utilities: sleep
+#
+# ENVIRONMENT VARIABLES USED:
+#   - MAX_RETRIES: Maximum retry attempts (default: 3)
+#   - INITIAL_RETRY_DELAY: First retry delay in seconds (default: 60)
+#   - MAX_RETRY_DELAY: Maximum delay between retries (default: 3600)
+#   - RETRY_BACKOFF_FACTOR: Delay multiplier (default: 2)
+#   - run_path: Marathon installation directory
+#   - logs: Log directory path
+#   - reports_base: Reports directory for metrics
+#
+# RETRY POLICIES:
+#   - critical: 5 retries, 30s initial, 2hr max delay
+#   - normal: 3 retries, 60s initial, 1hr max delay
+#   - batch: 1 retry, 120s initial, 10min max delay
+#
+# RETRYABLE ERRORS:
+#   - Network errors (20, 7, 52, 56)
+#   - Timeouts (124, 28)
+#   - SSH failures (255)
+#   - NOT retryable: Spot interruptions, file errors
 
 # Default retry configuration
 export MAX_RETRIES=${MAX_RETRIES:-3}

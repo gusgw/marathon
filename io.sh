@@ -1,3 +1,43 @@
+#! /bin/bash
+#
+# io.sh - Data transfer operations for Marathon using rclone
+#
+# PURPOSE:
+#   Manages all data input/output operations including downloading inputs,
+#   uploading outputs, and handling GPG encryption/decryption. Provides
+#   continuous output synchronization for long-running jobs.
+#
+# USAGE:
+#   This script is sourced by run.sh to provide I/O functions
+#   Should not be run directly
+#
+# KEY FUNCTIONS:
+#   - get_inputs: Download input files from remote storage
+#   - decrypt_inputs: Decrypt GPG-encrypted inputs in parallel
+#   - encrypt_outputs: Encrypt and sign outputs with GPG
+#   - send_outputs: Upload results to remote storage
+#   - poll_outputs: Continuously sync outputs during execution
+#
+# DEPENDENCIES:
+#   - rclone (with valid config at ${run_path}/rclone.conf)
+#   - GnuPG (for encryption/decryption operations)
+#   - GNU Parallel (for parallel crypto operations)
+#   - retry.sh (optional, for automatic retry of failed transfers)
+#
+# ENVIRONMENT VARIABLES USED:
+#   - NICE: Process nice value for resource management
+#   - input/output: rclone source/destination paths
+#   - work: Local working directory
+#   - inglob/outglob: File patterns for input/output
+#   - logs/logs_transfers: Log file locations
+#   - INBOUND_TRANSFERS/OUTBOUND_TRANSFERS: Parallel transfer limits
+#   - MAX_SUBPROCESSES: Parallel job limit for crypto operations
+#   - encrypt_flag: "yes" to enable encryption
+#   - sign/encrypt: GPG key IDs for signing and encryption
+#   - WAIT: Seconds between status checks
+#   - STAMP: Timestamp for log file naming
+#   - job: Job identifier
+
 # Load retry mechanism if available
 if [[ -f "${run_path}/retry.sh" ]]; then
     . "${run_path}/retry.sh"

@@ -1,3 +1,37 @@
+#! /bin/bash
+#
+# aws.sh - AWS EC2 spot instance management for Marathon
+#
+# PURPOSE:
+#   Provides AWS-specific functionality for running Marathon on EC2 spot
+#   instances. Monitors for spot interruption notices to enable graceful
+#   shutdown before instance termination.
+#
+# USAGE:
+#   This script is sourced by run.sh when running on AWS EC2
+#   Should not be run directly
+#
+# KEY FUNCTIONS:
+#   - spot_interruption_found: Check EC2 metadata for termination notice
+#   - poll_spot_interruption: Continuously monitor for interruptions
+#
+# DEPENDENCIES:
+#   - ec2-metadata command (AWS EC2 AMI tools)
+#   - curl (for accessing instance metadata service)
+#   - Standard Unix utilities: grep, sleep
+#
+# ENVIRONMENT VARIABLES USED:
+#   - logs: Log directory path
+#   - STAMP: Timestamp for log file naming
+#   - job: Job identifier
+#   - SHUTDOWN_SIGNAL: Exit code to trigger graceful shutdown
+#
+# NOTES:
+#   - Uses IMDSv2 (Instance Metadata Service Version 2) for security
+#   - AWS provides ~2 minute warning before spot termination
+#   - Graceful shutdown prevents data loss on spot interruption
+#   - Safe to run on non-EC2 systems (functions return 0)
+
 # spot_interruption_found: Check for AWS EC2 spot instance termination notice
 # 
 # Queries EC2 instance metadata to detect if a spot interruption notice has been

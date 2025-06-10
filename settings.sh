@@ -1,3 +1,53 @@
+#! /bin/bash
+#
+# settings.sh - Configuration management and directory setup for Marathon
+#
+# PURPOSE:
+#   Automatically generates derived settings from base configuration provided
+#   in run.sh. Creates necessary directory structures for workspace, logs,
+#   and temporary files. Calculates workspace requirements based on input sizes.
+#
+# USAGE:
+#   This script is sourced by run.sh after basic configuration
+#   Should not be run directly
+#
+# KEY FUNCTIONS:
+#   - Creates job-specific workspace directories
+#   - Sets up organized log directory structure with date-based paths
+#   - Configures ramdisk location for temporary files
+#   - Calculates required workspace size based on input data
+#   - Creates report directories for monitoring and analysis
+#
+# DEPENDENCIES:
+#   - rclone (for calculating input sizes)
+#   - bc (for arithmetic calculations)
+#   - gawk (for summing file sizes)
+#   - Standard Unix utilities: mkdir, date, sed
+#
+# ENVIRONMENT VARIABLES USED:
+#   Input (from run.sh):
+#   - workspace: Base workspace directory
+#   - logspace: Base log directory
+#   - job: Job identifier
+#   - NICE: Process nice value
+#   - input: rclone source path
+#   - inglob: Input file pattern
+#   - workfactor: Multiplier for workspace size calculation
+#   
+#   Output (exported):
+#   - RULE: Visual separator for logging
+#   - work: Job-specific workspace path
+#   - logs: Job-specific log directory
+#   - logs_base: Base log directory
+#   - logs_system: System metrics log path
+#   - logs_transfers: Transfer operation log path
+#   - ramdisk: Temporary file location in shared memory
+#   - DATE_YEAR/MONTH/DAY: Date components
+#   - DATE_PATH: Organized date path (YYYY/MM/DD)
+#   - reports_base: Base directory for reports
+#   - insize: Total size of input files
+#   - worksize: Calculated workspace requirement
+
 export RULE="***"
 
 export NICE=19

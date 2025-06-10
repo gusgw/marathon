@@ -1,4 +1,54 @@
 #! /bin/bash
+#
+# run.sh - Main orchestrator for the Marathon parallel computation framework
+#
+# PURPOSE:
+#   Coordinates the execution of embarrassingly parallel jobs using GNU Parallel.
+#   Manages the complete workflow from data fetching to result uploading, with
+#   support for both local execution and AWS Spot instances.
+#
+# USAGE:
+#   ./run.sh [cleanup_option] [job_name]
+#   
+#   cleanup_option: What to clean in workspace before starting
+#                   - "all": Remove everything
+#                   - "outputs": Remove only output files
+#                   - "none": Keep existing files
+#   job_name: Identifier for this job run (used in output filenames)
+#
+# KEY FUNCTIONS:
+#   - run(): Main worker function executed by GNU Parallel for each input
+#   - Coordinates data transfer via rclone
+#   - Manages parallel job execution with load balancing
+#   - Handles AWS Spot instance interruptions
+#   - Provides continuous output synchronization
+#
+# DEPENDENCIES:
+#   - GNU Parallel (for job distribution)
+#   - rclone (for data transfer)
+#   - GnuPG (for encryption/decryption if enabled)
+#   - GNU niceload (for system load management)
+#   - stress (for test mode)
+#   - Standard Unix utilities: find, dd, mv, sleep, kill, etc.
+#   - AWS CLI (if running on EC2)
+#
+# ENVIRONMENT VARIABLES USED:
+#   - MAX_SUBPROCESSES: Number of parallel jobs (default: 2)
+#   - WAIT: Seconds between status checks (default: 10.0)
+#   - output_wait: Seconds between output sync checks (default: 120.0)
+#   - target_load: System load limit for niceload (default: 6.0)
+#   - run_type: "test" for test mode, anything else for production
+#   - encrypt_flag: "yes" to enable GPG encryption
+#   - sign: GPG key ID for signing outputs
+#   - encrypt: GPG key ID for encrypting outputs
+#
+# CONFIGURATION:
+#   Most settings are defined inline or loaded from:
+#   - settings.sh: Auto-generated paths and computed values
+#   - io.sh: Data transfer functions
+#   - aws.sh: AWS-specific functions
+#   - cleanup.sh: Cleanup and signal handling
+#   - metadata.sh: Metadata generation utilities
 
 # Set the folder where this script is located
 # so that other files can be found.

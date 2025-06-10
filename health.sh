@@ -1,13 +1,53 @@
 #!/bin/bash
-# health.sh: Health check endpoint for marathon workers
 #
-# Provides a simple health check that can be called via HTTP or directly
-# to verify that a marathon worker is running and healthy.
+# health.sh - Health check endpoint for Marathon workers
 #
-# Exit codes:
-#   0 - Healthy
-#   1 - Unhealthy
-#   2 - Critical failure
+# PURPOSE:
+#   Provides comprehensive health monitoring for Marathon workers with both
+#   command-line and HTTP interfaces. Performs multiple system checks to
+#   ensure worker readiness and detect potential issues early.
+#
+# USAGE:
+#   ./health.sh {check|serve [port]|json}
+#   
+#   check - Run health check and exit with status code
+#   serve - Start HTTP health check server (default port: 8080)
+#   json  - Output JSON status without exit code
+#
+# KEY FUNCTIONS:
+#   - health_check: Performs comprehensive system health checks
+#   - serve_health_http: Simple HTTP server for monitoring tools
+#   - Checks disk space, memory, load, dependencies, and errors
+#
+# DEPENDENCIES:
+#   - netcat (nc) for HTTP server mode
+#   - bc (for arithmetic comparisons)
+#   - Standard Unix utilities: df, awk, nproc, uptime
+#   - /proc filesystem for system metrics
+#
+# ENVIRONMENT VARIABLES USED:
+#   - workspace: Working directory to check
+#   - logspace: Log directory to check
+#   - reports_base: Reports directory for error checking
+#   - HOSTNAME: System hostname
+#
+# EXIT CODES:
+#   - 0: Healthy - all checks passed
+#   - 1: Unhealthy - non-critical issues detected
+#   - 2: Critical - essential components missing
+#
+# HEALTH CHECKS:
+#   1. Critical directories exist
+#   2. Disk space >10% free
+#   3. Active marathon jobs (informational)
+#   4. rclone availability (critical)
+#   5. System load below threshold
+#   6. Memory >10% available
+#   7. GNU Parallel availability (critical)
+#   8. Recent error rate acceptable
+#
+# OUTPUT FORMAT:
+#   JSON with status, checks passed/total, messages, and metrics
 
 # Source configuration and utilities
 export run_path=$(dirname $(realpath $0))
