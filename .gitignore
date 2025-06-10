@@ -9,3 +9,7 @@ CLAUDE.md
 *.prompt
 error_handling_analysis.md
 recommendations.md
+
+# Temporary output files
+err
+out
