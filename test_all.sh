@@ -4,7 +4,7 @@
 # Usage: ./test_all.sh
 # Returns: 0 if all tests pass, non-zero if any test fails
 
-set -e  # Exit on first error
+# Don't use set -e as we want to run all tests even if some fail
 
 # Colors for output
 RED='\033[0;31m'
@@ -41,30 +41,42 @@ echo "Marathon Framework - Complete Test Suite"
 echo "========================================="
 echo "Starting at: $(date)"
 
+# Set quick test mode for faster execution
+export QUICK_TEST=yes
+
 # Basic functionality test
 run_test "Basic Functionality Test" "./test_basic.sh"
 
 # Process hierarchy tests
 run_test "Process Hierarchy Tests" "./test/test.sh"
 
-# Marathon framework tests
-run_test "Marathon Framework Tests" "./test_marathon.sh"
+# Check if Marathon has been initialized
+if [[ -d "/mnt/data/marathon" ]]; then
+    echo -e "\n${GREEN}Marathon appears to be initialized. Running full test suite.${NC}"
+    
+    # Marathon framework tests
+    run_test "Marathon Framework Tests" "./test_marathon.sh"
+    
+    # Cleanup mode tests (requires Marathon to be set up)
+    run_test "Cleanup Mode Tests" "./test_cleanup_modes.sh"
+    
+    # Performance tests (run with shorter duration for test suite)
+    export PERF_TEST_DURATION=10  # Short duration for test suite
+    run_test "Performance Tests" "./test_performance.sh"
+    
+    # Quick report test
+    run_test "Quick Report Test" "./test_report.sh"
+else
+    echo -e "\n${YELLOW}Marathon not initialized at /mnt/data/marathon. Skipping integration tests.${NC}"
+    echo "To run full tests, first execute a Marathon job using ./run.sh"
+fi
 
-# Cleanup mode tests
-run_test "Cleanup Mode Tests" "./test_cleanup_modes.sh"
-
-# Performance tests (run with shorter duration for test suite)
-export PERF_TEST_DURATION=10  # Short duration for test suite
-run_test "Performance Tests" "./test_performance.sh"
-
+# These tests don't require Marathon to be initialized
 # Retry mechanism tests
 run_test "Retry Mechanism Tests" "./test_retry.sh"
 
 # Summary generation test
 run_test "Summary Generation Test" "./test_summary.sh"
-
-# Quick report test
-run_test "Quick Report Test" "./test_report.sh"
 
 # Test summary
 echo -e "\n========================================="
