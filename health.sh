@@ -26,7 +26,7 @@
 #   - /proc filesystem for system metrics
 #
 # ENVIRONMENT VARIABLES USED:
-#   - workspace: Working directory to check
+#   - workspace: Working directory to check (defaults to current directory)
 #   - logspace: Log directory to check
 #   - reports_base: Reports directory for error checking
 #   - HOSTNAME: System hostname
@@ -79,7 +79,9 @@ function health_check {
     
     # Check 2: Check disk space (need at least 10% free)
     checks_total=$((checks_total + 1))
-    local disk_usage=$(df "${workspace}" | awk 'NR==2 {print $5}' | sed 's/%//')
+    # Use workspace if set, otherwise check current directory
+    local check_path="${workspace:-.}"
+    local disk_usage=$(df "${check_path}" 2>/dev/null | awk 'NR==2 {print $5}' | sed 's/%//')
     if [[ "${disk_usage}" -lt 90 ]]; then
         checks_passed=$((checks_passed + 1))
     else

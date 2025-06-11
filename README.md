@@ -258,7 +258,7 @@ A comprehensive test script is available to run all tests:
 # - Summary generation tests (always pass)
 ```
 
-**Note**: Integration tests that require full Marathon job execution are gracefully skipped with informative messages if the environment isn't fully configured. All basic functionality tests pass without requiring Marathon initialization.
+**Note**: Integration tests that require full Marathon job execution are gracefully skipped with informative messages if the environment isn't fully configured. All basic functionality tests pass without requiring Marathon initialization. Tests run cleanly without spurious error messages.
 
 ### Custom Job Function
 
@@ -439,7 +439,7 @@ tail -f ${logspace}/transfers/$(date +%Y/%m/%d)/*.log
 
 ### Health Checks
 
-Marathon includes a built-in health check system:
+Marathon includes a built-in health check system that can be used standalone or as part of monitoring:
 
 ```bash
 # Run single health check
@@ -457,7 +457,7 @@ Marathon includes a built-in health check system:
 
 Health checks verify:
 - Critical directories exist
-- Sufficient disk space (>10% free)
+- Sufficient disk space (>10% free) in workspace or current directory
 - Required tools available (rclone, GNU Parallel)
 - System load within limits
 - Adequate memory available

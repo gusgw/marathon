@@ -41,6 +41,7 @@
 #   - Creates temporary test directory cleaned up on exit
 #   - Fast retry delays used for quick test execution
 #   - All output color-coded for easy interpretation
+#   - Requires set_stamp to be called after sourcing bump.sh
 
 # Don't use set -e as tests may return non-zero exit codes
 set -o pipefail
@@ -48,6 +49,9 @@ set -o pipefail
 # Source bump utilities first
 export run_path=$(dirname $(realpath $0))
 . ${run_path}/bump/bump.sh
+
+# Set STAMP for logging functions
+set_stamp
 
 # Source retry mechanism
 . ./retry.sh
