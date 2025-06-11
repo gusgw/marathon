@@ -763,7 +763,7 @@ We use supervised machine-learning methods to predict price changes in the US He
 
 ### Multiweek prediction of the state of the northern hemisphere
 
-Imperfect knowledge of the state of the Earth system, combined with sensitivity to initial state, limits predictions. Useful advanced warning of extreme weather requires multi-week lead times, as do decisions on investments sensitive to energy markets. An original mathematical method, and the design of data structures that describe the Earth System, reduce the computational complexity and make possible multi-week predictions not possible with traditional methods, better even than with supercomputers used by facilities such as [NOAA in the USA](https://www.ncei.noaa.gov/products/weather-climate-models/global-ensemble-forecast), the [Met. Office in the UK](https://www.metoffice.gov.uk), and the [ECMWF in Europe](https://www.ecmwf.int/). This new, lightweight method outperforms for variables of critical interest the large scale, computationally expensive, [monolithic models that I developed and debugged for the Bureau of Meteorology.](http://www.bom.gov.au/research/projects/ACCESS-S/)
+Imperfect knowledge of the state of the Earth system, combined with sensitivity to initial state, limits predictions. Useful advanced warning of extreme weather requires multi-week lead times, as do decisions on investments sensitive to energy markets. An original mathematical method, and the design of data structures that describe the Earth System, reduce the computational complexity and make possible multi-week predictions not possible with traditional methods.
 
 ## Possible Extensions
 
